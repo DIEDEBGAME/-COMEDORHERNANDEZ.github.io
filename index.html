@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Virtual | Comedor Hernández</title>
+    <style>
+        /* Estética de Libro y Colores Vivos Formales */
+        :root {
+            --fondo-papel: #FDFBF7;
+            --texto-principal: #2C3E50;
+            --rojo-elegante: #A13333;
+            --dorado: #D4AF37;
+            --verde-boton: #2E8B57;
+            --gris-agotado: #888888;
+        }
+
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: var(--fondo-papel); color: var(--texto-principal); margin: 0; padding: 0; }
+        
+        h1, h2, h3, h4 { font-family: 'Georgia', 'Times New Roman', serif; color: var(--rojo-elegante); }
+
+        /* Navegación Responsive */
+        nav { background-color: var(--rojo-elegante); display: flex; justify-content: center; flex-wrap: wrap; padding: 10px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;}
+        nav button { background: transparent; color: white; border: none; font-size: 16px; font-family: 'Georgia', serif; margin: 5px 15px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid transparent; transition: all 0.3s; padding-bottom: 5px;}
+        nav button:hover, nav button.activo { border-bottom: 2px solid var(--dorado); color: var(--dorado); }
+        .badge-carrito { background: var(--dorado); color: #000; font-weight: bold; padding: 2px 8px; border-radius: 12px; font-size: 14px; margin-left: 5px; }
+
+        .contenedor { max-width: 800px; margin: 20px auto; padding: 30px; background: white; box-shadow: 0 0 15px rgba(0,0,0,0.05); border-radius: 4px; border-left: 1px solid #eaeaea; border-right: 1px solid #eaeaea; box-sizing: border-box;}
+
+        .seccion { display: none; animation: fadeIn 0.4s ease; }
+        .seccion.activa { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Portada */
+        .portada { text-align: center; }
+        .portada img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 20px; border: 3px solid var(--dorado); }
+        .capitular:first-letter { font-size: 3.5em; float: left; margin-right: 10px; line-height: 1; color: var(--rojo-elegante); font-family: 'Georgia', serif; }
+        p { font-size: 16px; line-height: 1.6; }
+
+        /* Etiquetas de Disponibilidad */
+        .etiqueta { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; text-transform: uppercase; margin-bottom: 10px;}
+        .disponible { background-color: var(--verde-boton); }
+        .agotado { background-color: var(--gris-agotado); }
+
+        /* Lista de Menú - Adaptado para lectura fácil */
+        .categoria-titulo { border-bottom: 2px solid var(--dorado); padding-bottom: 5px; margin-top: 35px; font-size: 1.6em;}
+        .platillo-card { display: flex; align-items: center; padding: 20px 0; border-bottom: 1px dashed #ccc; cursor: pointer; transition: background 0.3s; }
+        .platillo-card:hover { background-color: #f9f6f0; }
+        .platillo-mini-img { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; margin-right: 20px; border: 1px solid #ddd; flex-shrink: 0;}
+        .platillo-info { flex-grow: 1; }
+        .platillo-info h3 { margin: 0 0 5px 0; color: var(--texto-principal); font-size: 1.3em;}
+        .platillo-info p { margin: 0 0 10px 0; color: #666; font-size: 15px; line-height: 1.5; }
+        .precio { font-weight: bold; color: var(--rojo-elegante); font-size: 20px; }
+
+        /* Vista de Detalle del Platillo */
+        .btn-regresar { background: transparent; color: var(--rojo-elegante); border: 1px solid var(--rojo-elegante); padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 20px; font-size: 16px; transition: 0.3s; width: 100%; text-align: center; display: block;}
+        .btn-regresar:hover { background: var(--rojo-elegante); color: white; }
+        .detalle-img { width: 100%; height: 300px; object-fit: cover; border-radius: 8px; border: 2px solid var(--dorado); margin-bottom: 20px; }
+        .caja-resenas { background: #fdfdfd; border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        .resena-item { border-left: 3px solid var(--dorado); padding-left: 15px; margin-bottom: 15px; background: #f9f9f9; padding: 15px; }
+        .resena-autor { font-weight: bold; font-size: 16px; color: var(--rojo-elegante); margin-bottom: 5px; }
+
+        /* Carrito / Orden */
+        .item-carrito { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; align-items: center;}
+        .item-carrito h4 { margin: 0; color: var(--texto-principal); font-size: 1.1em;}
+        .btn-eliminar { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold;}
+        .total-caja { background: #f9f9f9; padding: 20px; border-top: 2px solid var(--dorado); text-align: right; margin-top: 20px; font-size: 24px; font-weight: bold; color: var(--texto-principal);}
+
+        /* Botones, Forms y Accesibilidad (Botones grandes) */
+        .btn-formal { background-color: var(--verde-boton); color: white; border: none; padding: 15px 25px; font-size: 16px; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: background 0.3s; }
+        .btn-formal:hover { background-color: #246B43; }
+        .btn-formal:disabled { background-color: var(--gris-agotado); cursor: not-allowed; }
+        .btn-enviar-orden { width: 100%; font-size: 20px; padding: 20px; margin-top: 20px; background-color: var(--rojo-elegante); }
+        .btn-enviar-orden:hover { background-color: #802828; }
+        input, textarea { width: 100%; padding: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; margin-bottom: 15px; font-size: 16px;}
+        .numero-mesa { background: #f9f9f9; padding: 20px; border-left: 5px solid var(--rojo-elegante); margin-bottom: 25px; font-size: 18px;}
+
+        /* Media Queries para Celulares */
+        @media (max-width: 600px) {
+            .contenedor { margin: 0; border: none; border-radius: 0; box-shadow: none; padding: 15px; }
+            .platillo-card { flex-direction: column; text-align: center; padding: 25px 0;}
+            .platillo-mini-img { margin: 0 0 15px 0; width: 100%; height: 200px; }
+            .detalle-img { height: 250px; }
+            .capitular:first-letter { font-size: 3em; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button class="activo" onclick="cambiarPestana('inicio', this)">Inicio</button>
+        <button onclick="cambiarPestana('menu', this)">Menú</button>
+        <button onclick="cambiarPestana('orden', this)">Mi Orden <span id="contador-carrito" class="badge-carrito">0</span></button>
+    </nav>
+
+    <div class="contenedor">
+        
+        <!-- INICIO -->
+        <div id="inicio" class="seccion activa portada">
+            <h1>Comedor Hernández</h1>
+            <img src="https://streetviewpixels-pa.googleapis.com/v1/thumbnail?cb_client=maps_sv.tactile&w=900&h=600&pitch=0&panoid=N7IBQOlDX9ClnIALr2BehQ&yaw=231.92117" alt="Comedor Hernández">
+            <p class="capitular">Bienvenidos al Comedor Hernández, donde la tradición y el buen sabor se encuentran en cada platillo. Nuestro compromiso es ofrecerle ingredientes de primera calidad en un ambiente cálido. Navegue por nuestro menú de forma sencilla y envíe su orden directo a la cocina.</p>
+        </div>
+
+        <!-- MENÚ GENERAL -->
+        <div id="menu" class="seccion">
+            <h2 style="text-align: center; font-size: 2em;">Selección Gastronómica</h2>
+            
+            <h3 class="categoria-titulo">Platillos Especiales</h3>
+            <div id="lista-especiales"></div>
+
+            <h3 class="categoria-titulo">Platillos Principales</h3>
+            <div id="lista-platillos"></div>
+
+            <h3 class="categoria-titulo">Bebidas</h3>
+            <div id="lista-bebidas"></div>
+        </div>
+
+        <!-- DETALLE DEL PLATILLO -->
+        <div id="detalle-platillo" class="seccion">
+            <button class="btn-regresar" onclick="cerrarDetalle()">← Regresar al Menú</button>
+            
+            <span id="det-estado" class="etiqueta"></span>
+            <h2 id="det-titulo" style="margin-top: 5px;">Nombre del Platillo</h2>
+            
+            <img id="det-img" class="detalle-img" src="" alt="Platillo">
+            <p id="det-desc"></p>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; flex-wrap: wrap; gap: 15px;">
+                <span id="det-precio" class="precio"></span>
+                <button id="btn-agregar-orden" class="btn-formal" onclick="agregarAOrden()">Agregar a la Orden</button>
+            </div>
+
+            <!-- Reseñas -->
+            <div class="caja-resenas">
+                <h3 style="margin-top: 0;">Reseñas de Clientes</h3>
+                <div id="det-resenas-lista"></div>
+                
+                <h4 style="margin-bottom: 10px; margin-top: 25px;">Deje su opinión sobre este platillo:</h4>
+                <input type="text" id="nueva-resena-autor" placeholder="Su Nombre (Ej. Doña Mari)">
+                <textarea id="nueva-resena-texto" rows="3" placeholder="¿Qué le pareció este platillo?"></textarea>
+                <button class="btn-formal" style="background-color: var(--rojo-elegante); width: 100%;" onclick="publicarResenaPlatillo()">Publicar Reseña</button>
+            </div>
+        </div>
+
+        <!-- MI ORDEN -->
+        <div id="orden" class="seccion">
+            <h2 style="text-align: center; font-size: 2em;">Su Orden Actual</h2>
+            
+            <div class="numero-mesa">
+                <label for="numMesa" style="font-weight: bold; display: block; margin-bottom: 10px;">Indique su Número de Mesa:</label>
+                <input type="number" id="numMesa" value="1" min="1" style="width: 100px;">
+            </div>
+
+            <div id="lista-orden">
+                <p style="text-align: center; color: #888; font-style: italic; font-size: 18px;">Aún no ha agregado platillos a su orden.</p>
+            </div>
+
+            <div class="total-caja">
+                Total a Pagar: $<span id="total-precio">0.00</span> MXN
+            </div>
+
+            <button class="btn-formal btn-enviar-orden" onclick="enviarOrdenCocina()">Mandar Orden a Cocina</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Simulador de estado que vendrá del Admin a través de localStorage
+        // Si no hay datos guardados, carga estos por defecto
+        const defaultCatalogo = {
+            'mole-olla': {
+                id: 'mole-olla',
+                tipo: 'especial',
+                nombre: 'Mole de Olla Tradicional',
+                descripcion: 'Delicioso caldo de res con chile pasilla, elote, calabacitas y chayote. Servido con tortillas hechas a mano y limón.',
+                precio: 150.00,
+                imagen: 'https://images.unsplash.com/photo-1548943487-a2e4b43bf029?auto=format&fit=crop&w=800&q=80',
+                estado: 'disponible', // Puede ser 'disponible' o 'agotado'
+                resenas: []
+            },
+            'enchiladas': {
+                id: 'enchiladas',
+                tipo: 'platillo',
+                nombre: 'Enchiladas Huastecas',
+                descripcion: 'Auténticas enchiladas tradicionales bañadas en salsa, acompañadas de cecina de la región y queso fresco.',
+                precio: 120.00,
+                imagen: 'https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=800&q=80',
+                estado: 'disponible',
+                resenas: [{ autor: 'Don Carlos', texto: 'Muy bien servidas, la carne es de primera.' }]
+            },
+            'chiles-rellenos': {
+                id: 'chiles-rellenos',
+                tipo: 'especial',
+                nombre: 'Chiles Rellenos de Queso',
+                descripcion: 'Chile poblano capeado relleno de queso panela bañado en caldillo de jitomate.',
+                precio: 110.00,
+                imagen: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+                estado: 'agotado', // Ejemplo de platillo agotado
+                resenas: []
+            },
+            'coca-cola': {
+                id: 'coca-cola',
+                tipo: 'bebida',
+                nombre: 'Coca Cola Clásica (600ml)',
+                descripcion: 'Bebida carbonatada bien fría, excelente para acompañar cualquier alimento.',
+                precio: 25.00,
+                imagen: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80',
+                estado: 'disponible',
+                resenas: []
+            }
+        };
+
+        // Leer catálogo del localStorage (Para que el Admin lo controle)
+        let catalogo = JSON.parse(localStorage.getItem('catalogoComedor')) || defaultCatalogo;
+        
+        let platilloActual = null;
+        let carrito = [];
+
+        // Renderizar Menú
+        function cargarMenu() {
+            document.getElementById('lista-especiales').innerHTML = '';
+            document.getElementById('lista-platillos').innerHTML = '';
+            document.getElementById('lista-bebidas').innerHTML = '';
+
+            for (const clave in catalogo) {
+                const item = catalogo[clave];
+                
+                // Configurar etiqueta visual
+                const claseEtiqueta = item.estado === 'disponible' ? 'disponible' : 'agotado';
+                const textoEtiqueta = item.estado === 'disponible' ? 'Disponible' : 'Agotado';
+
+                const html = `
+                    <div class="platillo-card" onclick="abrirDetalle('${clave}')">
+                        <img src="${item.imagen}" class="platillo-mini-img" alt="${item.nombre}">
+                        <div class="platillo-info">
+                            <span class="etiqueta ${claseEtiqueta}">${textoEtiqueta}</span>
+                            <h3>${item.nombre}</h3>
+                            <p>${item.descripcion.substring(0, 60)}...</p>
+                            <span class="precio">$${item.precio.toFixed(2)} MXN</span>
+                        </div>
+                    </div>
+                `;
+                
+                if(item.tipo === 'especial') document.getElementById('lista-especiales').innerHTML += html;
+                if(item.tipo === 'platillo') document.getElementById('lista-platillos').innerHTML += html;
+                if(item.tipo === 'bebida') document.getElementById('lista-bebidas').innerHTML += html;
+            }
+        }
+
+        // Navegación
+        function cambiarPestana(idSeccion, boton) {
+            document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('activo'));
+            document.getElementById(idSeccion).classList.add('activa');
+            if(boton) boton.classList.add('activo');
+            window.scrollTo(0, 0); // Sube la pantalla en móviles al cambiar de pestaña
+        }
+
+        // Vista Detalle
+        function abrirDetalle(clave) {
+            platilloActual = catalogo[clave];
+            document.getElementById('det-titulo').innerText = platilloActual.nombre;
+            document.getElementById('det-img').src = platilloActual.imagen;
+            document.getElementById('det-desc').innerText = platilloActual.descripcion;
+            document.getElementById('det-precio').innerText = "$" + platilloActual.precio.toFixed(2) + " MXN";
+            
+            // Configurar etiqueta y botón en la vista detalle
+            const etiqueta = document.getElementById('det-estado');
+            const btnOrden = document.getElementById('btn-agregar-orden');
+            
+            if (platilloActual.estado === 'disponible') {
+                etiqueta.className = 'etiqueta disponible';
+                etiqueta.innerText = 'Disponible';
+                btnOrden.disabled = false;
+                btnOrden.innerText = 'Agregar a la Orden';
+            } else {
+                etiqueta.className = 'etiqueta agotado';
+                etiqueta.innerText = 'No Disponible por ahora';
+                btnOrden.disabled = true;
+                btnOrden.innerText = 'Platillo Agotado';
+            }
+            
+            renderizarResenas();
+
+            document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+            document.getElementById('detalle-platillo').classList.add('activa');
+            window.scrollTo(0, 0);
+        }
+
+        function cerrarDetalle() {
+            cambiarPestana('menu');
+            document.querySelectorAll('nav button')[1].classList.add('activo');
+        }
+
+        // Reseñas
+        function renderizarResenas() {
+            const caja = document.getElementById('det-resenas-lista');
+            caja.innerHTML = '';
+            
+            if(platilloActual.resenas.length === 0) {
+                caja.innerHTML = '<p style="color:#888; font-style:italic;">Aún no hay reseñas. ¡Sea el primero en opinar!</p>';
+                return;
+            }
+            platilloActual.resenas.forEach(res => {
+                caja.innerHTML += `
+                    <div class="resena-item">
+                        <div class="resena-autor">${res.autor}</div>
+                        <p style="font-size: 15px; color: #555; margin: 0; font-style: italic;">"${res.texto}"</p>
+                    </div>
+                `;
+            });
+        }
+
+        function publicarResenaPlatillo() {
+            const autor = document.getElementById('nueva-resena-autor').value;
+            const texto = document.getElementById('nueva-resena-texto').value;
+
+            if(!autor || !texto) {
+                alert("Estimado cliente, por favor ingrese su nombre y su opinión antes de publicar.");
+                return;
+            }
+
+            platilloActual.resenas.push({ autor: autor, texto: texto });
+            
+            // Guardar cambios en el localStorage para que persistan las reseñas
+            const idPlatillo = Object.keys(catalogo).find(k => catalogo[k].nombre === platilloActual.nombre);
+            if(idPlatillo) catalogo[idPlatillo] = platilloActual;
+            localStorage.setItem('catalogoComedor', JSON.stringify(catalogo));
+
+            document.getElementById('nueva-resena-autor').value = '';
+            document.getElementById('nueva-resena-texto').value = '';
+            renderizarResenas();
+            alert("Su reseña ha sido publicada exitosamente. ¡Gracias!");
+        }
+
+        // Carrito
+        function agregarAOrden() {
+            carrito.push({
+                idCarrito: Date.now(),
+                nombre: platilloActual.nombre,
+                precio: platilloActual.precio
+            });
+            actualizarInterfazCarrito();
+            alert(`"${platilloActual.nombre}" se agregó a su orden.`);
+        }
+
+        function eliminarDeOrden(idCarrito) {
+            carrito = carrito.filter(item => item.idCarrito !== idCarrito);
+            actualizarInterfazCarrito();
+        }
+
+        function actualizarInterfazCarrito() {
+            document.getElementById('contador-carrito').innerText = carrito.length;
+            const listaOrden = document.getElementById('lista-orden');
+            let total = 0;
+            
+            if(carrito.length === 0) {
+                listaOrden.innerHTML = '<p style="text-align: center; color: #888; font-style: italic; font-size: 18px;">Aún no ha agregado platillos a su orden.</p>';
+            } else {
+                listaOrden.innerHTML = '';
+                carrito.forEach(item => {
+                    total += item.precio;
+                    listaOrden.innerHTML += `
+                        <div class="item-carrito">
+                            <div>
+                                <h4>${item.nombre}</h4>
+                                <span style="color: var(--rojo-elegante); font-weight: bold; font-size: 18px;">$${item.precio.toFixed(2)}</span>
+                            </div>
+                            <button class="btn-eliminar" onclick="eliminarDeOrden(${item.idCarrito})">Quitar</button>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('total-precio').innerText = total.toFixed(2);
+        }
+
+        function enviarOrdenCocina() {
+            if(carrito.length === 0) {
+                alert("Su orden está vacía. Por favor, agregue artículos desde el Menú.");
+                return;
+            }
+
+            const numeroMesa = document.getElementById('numMesa').value;
+            if (!numeroMesa || numeroMesa <= 0) {
+                alert("Estimado cliente, asigne su número de mesa para continuar.");
+                return;
+            }
+
+            let registroPedidos = JSON.parse(localStorage.getItem('pedidosComedor')) || [];
+            
+            registroPedidos.push({
+                idPedido: Date.now(),
+                mesa: numeroMesa,
+                articulos: carrito,
+                total: document.getElementById('total-precio').innerText,
+                estado: "Pendiente",
+                hora: new Date().toLocaleTimeString()
+            });
+            
+            localStorage.setItem('pedidosComedor', JSON.stringify(registroPedidos));
+
+            carrito = [];
+            actualizarInterfazCarrito();
+            
+            alert(`¡Su orden ha sido enviada a cocina!\nMesa: ${numeroMesa}\nEn breve será atendido.`);
+            cambiarPestana('inicio');
+            document.querySelectorAll('nav button')[0].classList.add('activo');
+        }
+
+        // Inicializar la app
+        cargarMenu();
+    </script>
+</body>
+</html>
